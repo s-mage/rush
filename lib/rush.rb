@@ -1,16 +1,22 @@
+require 'etc' # get info from /etc
+
 # The top-level Rush module has some convenience methods for accessing the
 # local box.
 module Rush
-  # Access the root filesystem of the local box.  Example:
+  # Access the root filesystem of the local box.
   #
+  # @param key [String] relative path.
+  # @example
   #   Rush['/etc/hosts'].contents
   #
   def self.[](key)
     box[key]
   end
 
-  # Create a dir object from the path of a provided file.  Example:
+  # Create a dir object from the path of a provided file.
   #
+  # @param filename [String] path that should be created.
+  # @example
   #   Rush.dir(__FILE__).files
   #
   def self.dir(filename)
@@ -18,8 +24,9 @@ module Rush
   end
 
   # Create a dir object based on the shell's current working directory at the
-  # time the program was run.  Example:
+  # time the program was run.
   #
+  # @example
   #   Rush.launch_dir.files
   #
   def self.launch_dir
@@ -32,17 +39,19 @@ module Rush
     box.bash(command, options)
   end
 
-  # Pull the process list for the local machine.  Example:
-   #
-   #   Rush.processes.filter(:cmdline => /ruby/)
+  # Pull the process list for the local machine.
+  #
+  # @example
+  #   Rush.processes.filter(:cmdline => /ruby/)
   #
   def self.processes
     box.processes
   end
 
-  # Get the process object for this program's PID.  Example:
-   #
-   #   puts "I'm using #{Rush.my_process.mem} blocks of memory"
+  # Get the process object for this program's PID.
+  #
+  # @example
+  #   puts "I'm using #{Rush.my_process.mem} blocks of memory"
   #
   def self.my_process
     box.processes.filter(:pid => ::Process.pid).first
@@ -65,6 +74,7 @@ require_relative 'rush/exceptions'
 require_relative 'rush/config'
 require_relative 'rush/commands'
 require_relative 'rush/access'
+require_relative 'rush/path'
 require_relative 'rush/entry'
 require_relative 'rush/file'
 require_relative 'rush/dir'
@@ -77,7 +87,5 @@ require_relative 'rush/array_ext'
 require_relative 'rush/process'
 require_relative 'rush/process_set'
 require_relative 'rush/local'
-require_relative 'rush/remote'
-require_relative 'rush/ssh_tunnel'
 require_relative 'rush/box'
 require_relative 'rush/embeddable_shell'

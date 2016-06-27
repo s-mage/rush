@@ -13,6 +13,18 @@ class Rush::Entry
     @box = box || Rush::Box.new('localhost')
   end
 
+  def method_missing(meth, *args, &block)
+    if executables.include? meth.to_s
+      open_with meth, *args
+    else
+      super
+    end
+  end
+
+  def executables
+    Rush::Path.executables
+  end
+
   # The factory checks to see if the full path has a trailing slash for
   # creating a Rush::Dir rather than the default Rush::File.
   def self.factory(full_path, box=nil)
@@ -27,7 +39,7 @@ class Rush::Entry
 
   def to_s      # :nodoc:
     if box.host == 'localhost'
-      "#{full_path}"
+      full_path
     else
       inspect
     end
@@ -47,7 +59,7 @@ class Rush::Entry
   end
 
   def full_path
-    "#{@path}/#{@name}"
+    "#{path}/#{name}"
   end
 
   def quoted_path
@@ -161,6 +173,41 @@ class Rush::Entry
   #
   def access
     Rush::Access.new.from_octal(stat[:mode]).display_hash
+  end
+
+  # Change entry ownership
+  #
+  # Changes owner and group on the named files (in list) to the user user and the group group. user and group may be an ID (Integer/String) or a name (String). If user or group is nil, this method does not change the attribute.
+  #
+  # @param user [string/integer] The user to own the file
+  # @param group [string/integer] The group to own the file
+  # @param options [hash] the options to pass to FileUtils.chown (eg. 'noop', 'verbose' or 'recursive' )
+  #
+  def chown(user = nil, group = nil, options = {})
+    connection.chown(full_path, user, group, options)
+    self
+  end
+
+  # Shortcut to Entry::chown to pass the 'recursive' option by default
+  #
+  def chown_R(user = nil, group = nil, options = {})
+    options[:recursive] = true
+    chown(user, group, options)
+  end
+
+  # Chown in ruby way. Ruby way is creating accessors.
+  def owner
+    stat = ::File.stat(full_path)
+    { user: Etc.getpwuid(stat.uid).name, group: Etc.getgrgid(stat.gid).name }
+  end
+
+  def owner=(params)
+    case params
+    when Hash then chown(params.delete(:user), params.delete(:group), params)
+    when String then chown(params)
+    when Numeric then chown(Etc.getpwuid(params).name)
+    else raise 'Something wrong with params for chown'
+    end
   end
 
   # Destroy the entry.  If it is a dir, everything inside it will also be destroyed.

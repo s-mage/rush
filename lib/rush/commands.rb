@@ -1,5 +1,6 @@
 # The commands module contains operations against Rush::File entries, and is
-# mixed in to Rush::Entry and Array.  This means you can run these commands against a single
+# mixed in to Rush::Entry and Array.
+# This means you can run these commands against a single
 # file, a dir full of files, or an arbitrary list of files.
 #
 # Examples:
@@ -7,11 +8,12 @@
 #   box['/etc/hosts'].search /localhost/       # single file
 #   box['/etc/'].search /localhost/            # entire directory
 #   box['/etc/**/*.conf'].search /localhost/   # arbitrary list
+#
 module Rush::Commands
   # The entries command must return an array of Rush::Entry items.  This
   # varies by class that it is mixed in to.
   def entries
-    raise "must define me in class mixed in to for command use"
+    fail 'must define me in class mixed in to for command use'
   end
 
   # Search file contents for a regular expression.  A Rush::SearchResults
@@ -39,19 +41,10 @@ module Rush::Commands
     end
   end
 
-  # Invoke vi on one or more files - only works locally.
-  def vi(*args)
-    if self.class == Rush::Dir
-      system "cd #{full_path}; vim"
-    else
-      open_with('vim', *args)
-    end
-  end
-  alias_method :vim, :vi
-
-  # Invoke TextMate on one or more files - only works locally.
-  def mate(*args)
-    open_with('mate', *args)
+  # Open file with $EDITOR.
+  #
+  def edit(*args)
+    open_with ENV['EDITOR'], *args
   end
 
   # Open file with xdg-open.
@@ -63,14 +56,38 @@ module Rush::Commands
 
   # Open file with any application you like.
   # Usage:
-  #   home.locate('timetable').open_witn :vim
+  #   home.locate('timetable').open_with :vim
+  #   home['.vimrc'].vim { other: '+55', x: true, u: 'other_vimrc', cmd: 'ls' }
+  #   home['my_app'].rails :c, env: { rails_env: 'test' } # environment vars
   def open_with(app, *args)
-    names = dir? ? '' : entries.map(&:to_s).join(' ')
-    system "cd #{dirname}; #{app.to_s} #{names} #{args.join(' ')}"
+    system(*open_command(app, *args))
   end
 
   def output_of(app, *args)
-    names = entries.map(&:to_s).join(' ')
-    `cd #{dirname}; #{app.to_s} #{names} #{args.join(' ')}`
+    `#{open_command(app, *args)}`
+  end
+
+  def opt_to_s(k, v)
+    key = k.size == 1 ? "-#{k}" : "--#{k}"
+    case
+    when v == true then key
+    when k == 'other' || k == :other then v
+    else "#{key} #{v}"
+    end
+  end
+
+  def open_command(app, *args)
+    opts = args.last.is_a?(Hash) ? args.pop : {}
+    names = dir? ? '' : entries.map { |x| Rush.quote x.to_s }.join(' ')
+    options = opts
+      .reject { |k, _| k == :env }
+      .map    { |k, v| opt_to_s(k, v) }
+      .join(' ')
+    dir = Rush.quote dirname.to_s
+    cmd = "cd #{dir}; #{app} #{names} #{options} #{args.join(' ')}"
+    if vars = opts[:env]
+      env = vars.inject({}) { |r, (k, v)| r.merge(k.to_s.upcase => v.to_s) }
+    end
+    vars ? [env, cmd] : cmd
   end
 end

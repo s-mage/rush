@@ -23,7 +23,7 @@ class Rush::Dir < Rush::Entry
 
 	# Entries contained within this dir - not recursive.
 	def contents
-		find_by_glob('*')
+		find_by_glob('*') + find_by_glob('.[!.]*')
 	end
 
 	# Files contained in this dir only.
@@ -49,7 +49,7 @@ class Rush::Dir < Rush::Entry
 	alias_method :/, :[]
 
   def locate(path)
-    located = bash("locate #{path}").split("\n").
+    located = bash("locate -i #{path}").split("\n").
       map { |x| x.dir? ? Rush::Dir.new(x) : Rush::File.new(x) }
     located.size == 1 ? located.first : located
   end
@@ -137,16 +137,9 @@ class Rush::Dir < Rush::Entry
 	end
 
 	# Text output of dir listing, equivalent to the regular unix shell's ls command.
-	def ls
-		out = [ "#{self}" ]
-		nonhidden_dirs.each do |dir|
-			out << "  #{dir.name}/"
-		end
-		nonhidden_files.each do |file|
-			out << "  #{file.name}"
-		end
-		out.join("\n")
-	end
+  def ls(*args)
+    output_of 'ls', *args
+  end
 
 	# Run rake within this dir.
 	def rake(*args)

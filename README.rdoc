@@ -2,7 +2,7 @@
 
 rush is a unix integration library and an interactive shell which uses pure Ruby syntax.  Walk directory trees; create, copy, search, and destroy files; find and kill processes - everything you'd normally do with shell commands, now in the strict and elegant world of Ruby.
 
-{<img src="https://travis-ci.org/s-mage/rush.svg?branch=master" alt="Build Status" />}[https://travis-ci.org/s-mage/rush]
+{<img src="https://drone.io/github.com/s-mage/rush/status.png" alt="Build Status" />}[https://drone.io/github.com/s-mage/rush]
 
 
 == Install
@@ -10,6 +10,10 @@ rush is a unix integration library and an interactive shell which uses pure Ruby
 Install v.0.6.8 from rubygems.org ~ no longer maintained
 
   sudo gem install rush
+
+Install last stable version (yes, it named rush2 and I know that it's ugly, but still):
+
+  sudo gem install rush2
 
 
 Or for the bleeding edge:
@@ -117,9 +121,9 @@ Patches contributed by Chihiro Ito, Gabriel Ware, Michael Schutte, Ricardo Chima
 
 Logo by James Lindenbaum
 
-Released under the MIT License: http://www.opensource.org/licenses/mit-license.php
+Now maintained by Sergey Smagin. Ask me if something is unclear: smaginsergey1310@gmail.com
 
-http://rush.heroku.com
+Released under the MIT License: http://www.opensource.org/licenses/mit-license.php
 
 http://groups.google.com/group/ruby-shell
 
